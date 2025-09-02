@@ -144,9 +144,9 @@ export default function HomePage() {
     if (!searchValue.trim()) return filteredEvents;
     
     const searchLower = searchValue.toLowerCase();
-    return filteredEvents.filter(event => 
-      event.title.toLowerCase().includes(searchLower) ||
-      event.description.toLowerCase().includes(searchLower) ||
+    return filteredEvents?.filter(event => 
+      event.title?.toLowerCase().includes(searchLower) ||
+      event.description?.toLowerCase().includes(searchLower) ||
       event.tags?.some(tag => tag.toLowerCase().includes(searchLower))
     );
   }, [filteredEvents, searchValue]);

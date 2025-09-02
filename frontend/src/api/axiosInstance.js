@@ -3,7 +3,7 @@ import { showSnackbar } from "../features/ui/uiSlice";
 import { store } from "../app/store";
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:9000/api",
+  baseURL: "https://eventhub-kafc.onrender.com/api",
   withCredentials: true,
 });
 
