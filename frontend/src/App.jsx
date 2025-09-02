@@ -42,6 +42,14 @@ export default function App() {
             </RequireAuth>
           } 
         />
+        <Route 
+          path="/feedback" 
+          element={
+            <RequireAuth>
+              <FeedbackPage />
+            </RequireAuth>
+          } 
+        />
         <Route path="/signup" element={<Signup />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/login" element={<Login />} />

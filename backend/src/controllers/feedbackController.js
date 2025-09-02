@@ -92,11 +92,11 @@ export const validateToken = asyncHandler(async (req, res) => {
 });
 
 export const submitFeedback = asyncHandler(async (req, res) => {
-  const { eventId, hostRating, eventRating, eventExperience, attendeeName } = req.body;
+  const { eventId, hostRating, eventRating, eventExperience, hostFeedback, attendeeName } = req.body;
   const userId = req.user.id;
 
-  if (!eventId || !hostRating || !eventRating || !eventExperience || !attendeeName) {
-    throw createError(400, "All fields are required");
+  if (!eventId || !hostRating || !eventRating || !attendeeName) {
+    throw createError(400, "Event ID, host rating, event rating, and attendee name are required");
   }
 
   if (hostRating < 1 || hostRating > 5 || eventRating < 1 || eventRating > 5) {
@@ -127,7 +127,8 @@ export const submitFeedback = asyncHandler(async (req, res) => {
     attendeeName: attendeeName.trim(),
     hostRating,
     eventRating,
-    eventExperience: eventExperience.trim()
+    eventExperience: eventExperience?.trim() || "",
+    hostFeedback: hostFeedback?.trim() || ""
   });
 
   await cacheInvalidatePattern(`event:details:${eventId}:*`);
@@ -145,11 +146,11 @@ export const submitFeedback = asyncHandler(async (req, res) => {
 });
 
 export const submitFeedbackWithToken = asyncHandler(async (req, res) => {
-  const { token, hostRating, eventRating, eventExperience, attendeeName } = req.body;
+  const { token, hostRating, eventRating, eventExperience, hostFeedback, attendeeName } = req.body;
   const userId = req.user.id;
 
-  if (!token || !hostRating || !eventRating || !eventExperience || !attendeeName) {
-    throw createError(400, "All fields are required");
+  if (!token || !hostRating || !eventRating || !attendeeName) {
+    throw createError(400, "Token, host rating, event rating, and attendee name are required");
   }
 
   if (hostRating < 1 || hostRating > 5 || eventRating < 1 || eventRating > 5) {
@@ -185,7 +186,7 @@ export const submitFeedbackWithToken = asyncHandler(async (req, res) => {
   }).lean();
   
   if (existingFeedback) {
-    throw createError(400, "You have already submitted feedback for this event");
+    throw createError(400, "This feedback token has already been used");
   }
 
   const userName = await User.findById(userId).select('name').lean();
@@ -196,7 +197,8 @@ export const submitFeedbackWithToken = asyncHandler(async (req, res) => {
     attendeeName: attendeeName.trim(),
     hostRating,
     eventRating,
-    eventExperience: eventExperience.trim()
+    eventExperience: eventExperience?.trim() || "",
+    hostFeedback: hostFeedback?.trim() || ""
   });
 
   await FeedbackToken.updateOne({ token }, { used: true });

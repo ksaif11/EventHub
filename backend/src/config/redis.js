@@ -16,29 +16,29 @@ try {
 
     redis.ping()
       .then(result => {
-        console.log('✅ Redis ping response:', result);
+        console.log('Redis ping response:', result);
       })
       .catch(err => {
-        console.error('❌ Redis ping failed:', err);
-        console.log('⚠️ Continuing without Redis cache...');
+        console.error('Redis ping failed:', err);
+        console.log('Continuing without Redis cache...');
         redis = null;
       });
 
     redis.on('connect', () => {
-      console.log('✅ Redis connected');
+      console.log('Redis connected');
     });
 
     redis.on('error', (err) => {
-      console.error('❌ Redis connection error:', err);
-      console.log('⚠️ Continuing without Redis cache...');
+      console.error('Redis connection error:', err);
+      console.log('Continuing without Redis cache...');
       redis = null;
     });
   } else {
-    console.log('⚠️ No REDIS_URL provided, running without Redis cache...');
+    console.log('No REDIS_URL provided, running without Redis cache...');
   }
 } catch (error) {
-  console.error('❌ Redis initialization error:', error);
-  console.log('⚠️ Continuing without Redis cache...');
+  console.error('Redis initialization error:', error);
+  console.log('Continuing without Redis cache...');
   redis = null;
 }
 

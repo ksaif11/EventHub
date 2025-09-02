@@ -141,9 +141,6 @@ export default function CreateEventPage() {
   const onSubmit = async (e) => {
     e.preventDefault();
     
-    console.log("Form submission started");
-    console.log("Form values:", values);
-    
     const payload = {
       title: values.title?.trim(),
       description: values.description?.trim(),
@@ -161,8 +158,6 @@ export default function CreateEventPage() {
         phone: values.contactPerson.phone?.trim(),
       },
     };
-
-    console.log("Payload:", payload);
 
     const validationErrors = validateCreateEventForm(payload);
     if (Object.keys(validationErrors).length > 0) {

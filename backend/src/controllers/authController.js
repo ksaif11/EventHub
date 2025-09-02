@@ -73,7 +73,6 @@ export const verifyOtp = async (req, res, next) => {
       await sendHtmlEmail(email, welcomeTemplate.subject, welcomeTemplate.html);
     } catch (emailError) {
       console.error("Failed to send welcome email:", emailError);
-      // Don't fail the verification if welcome email fails
     }
 
     return res.json({ success: true, token, sanitizedUser });

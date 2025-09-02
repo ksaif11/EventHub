@@ -182,7 +182,6 @@ export default function HomePage() {
       });
       setTags(Array.from(uniqueTags));
     } catch (error) {
-      console.error("Failed to fetch events:", error);
     } finally {
       setLoading(false);
     }

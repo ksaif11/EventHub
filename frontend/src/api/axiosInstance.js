@@ -25,7 +25,6 @@ axiosInstance.interceptors.response.use(
     try {
       store.dispatch(showSnackbar({ message, severity: "error" }));
     } catch (e) {
-      console.error("Failed to dispatch global snackbar", e);
     }
 
     return Promise.reject(error);

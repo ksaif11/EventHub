@@ -32,11 +32,8 @@ export const listEvents = asyncHandler(async (req, res) => {
 
   const cached = await cacheGet(cacheKey);
   if (cached) {
-    console.log(` Cache HIT: ${cacheKey}`);
     return ok(res, cached);
   }
-
-  console.log(`❌ Cache MISS: ${cacheKey}`);
 
   const filter = { date: { $gte: new Date() } };
 
@@ -53,11 +50,46 @@ export const listEvents = asyncHandler(async (req, res) => {
       .skip(skip)
       .limit(limit)
       .select("title date location.formattedAddress tags attendeeCount organizerId")
+      .populate('organizerId', 'name email')
       .lean(),
     Event.countDocuments(filter),
   ]);
 
-  const result = { events: items, total, page, limit };
+  // Get ratings for events that have feedback
+  const eventIds = items.map(item => item._id);
+  const feedbacks = await Feedback.find({ eventId: { $in: eventIds } })
+    .select('eventId hostRating eventRating')
+    .lean();
+
+  // Calculate average ratings for each event
+  const eventRatings = {};
+  feedbacks.forEach(feedback => {
+    if (!eventRatings[feedback.eventId]) {
+      eventRatings[feedback.eventId] = { totalHostRating: 0, totalEventRating: 0, count: 0 };
+    }
+    eventRatings[feedback.eventId].totalHostRating += feedback.hostRating;
+    eventRatings[feedback.eventId].totalEventRating += feedback.eventRating;
+    eventRatings[feedback.eventId].count += 1;
+  });
+
+  // Add ratings and organizer info to events
+  const eventsWithRatings = items.map(event => {
+    const ratings = eventRatings[event._id];
+    const avgHostRating = ratings ? Math.round((ratings.totalHostRating / ratings.count) * 10) / 10 : 0;
+    const avgEventRating = ratings ? Math.round((ratings.totalEventRating / ratings.count) * 10) / 10 : 0;
+    
+    return {
+      ...event,
+      organizer: event.organizerId,
+      ratings: ratings ? {
+        averageHostRating: avgHostRating,
+        averageEventRating: avgEventRating,
+        totalFeedbacks: ratings.count
+      } : null
+    };
+  });
+
+  const result = { events: eventsWithRatings, total, page, limit };
   
   await cacheSet(cacheKey, result, 300);
 
@@ -75,11 +107,8 @@ export const getEvent = asyncHandler(async (req, res) => {
 
   const cached = await cacheGet(cacheKey);
   if (cached) {
-    console.log(` Cache HIT: ${cacheKey}`);
     return ok(res, cached);
   }
-
-  console.log(`❌ Cache MISS: ${cacheKey}`);
 
   const event = await Event.findById(req.params.id).lean();
   if (!event) throw createError(404, "Event not found");

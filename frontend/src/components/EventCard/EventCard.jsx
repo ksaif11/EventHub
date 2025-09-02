@@ -1,5 +1,6 @@
 import { memo, useMemo } from "react";
-import { Card, CardContent, CardActions, Typography, Button, Box, Chip } from "@mui/material";
+import { Card, CardContent, CardActions, Typography, Button, Box, Chip, Avatar } from "@mui/material";
+import StarIcon from "@mui/icons-material/Star";
 
 const EventCard = memo(({ event, actions }) => {
   const formattedDate = useMemo(() => {
@@ -47,6 +48,30 @@ const EventCard = memo(({ event, actions }) => {
             {displayTags.map((tag) => (
               <Chip key={tag} label={tag} size="small" sx={{ mr: 0.5 }} />
             ))}
+          </Box>
+        )}
+
+        {/* Organizer Information and Rating */}
+        {event.organizer && (
+          <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #e0e0e0' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Avatar sx={{ width: 24, height: 24, bgcolor: '#6C47FF', fontSize: '0.75rem' }}>
+                  {event.organizer.name?.charAt(0)?.toUpperCase() || event.organizer.email?.charAt(0)?.toUpperCase() || 'U'}
+                </Avatar>
+                <Typography variant="caption" color="text.secondary">
+                  {event.organizer.email}
+                </Typography>
+              </Box>
+              {event.ratings && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <StarIcon sx={{ fontSize: 16, color: '#ffc107' }} />
+                  <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                    {event.ratings.averageHostRating.toFixed(1)}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
           </Box>
         )}
       </CardContent>

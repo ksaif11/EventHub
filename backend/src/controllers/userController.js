@@ -16,7 +16,7 @@ export const getMe = asyncHandler(async (req, res) => {
     return ok(res, cached);
   }
 
-  console.log(`❌ Cache MISS: ${cacheKey}`);
+  console.log(`Cache MISS: ${cacheKey}`);
 
   const user = await User.findById(req.user.id).select("_id name email joinedEvents createdEvents").lean();
   if (!user) throw createError(404, "User not found");

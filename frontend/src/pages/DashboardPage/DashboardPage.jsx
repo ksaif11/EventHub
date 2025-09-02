@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
-import { Container, Box, Tabs, Tab, Grid, Button, Snackbar, Alert } from "@mui/material";
+import { Container, Box, Tabs, Tab, Grid, Button, Snackbar, Alert, CircularProgress } from "@mui/material";
 import EventCard from "../../components/EventCard/EventCard";
 import EmptyState from "../../components/EmptyState/EmptyState";
 import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
-// import Loader from "../../components/Loader/Loader";
 import axiosInstance from "../../api/axiosInstance";
+
+// Simple Loader component
+const Loader = () => (
+  <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", py: 4 }}>
+    <CircularProgress />
+  </Box>
+);
 
 export default function DashboardPage() {
   const [tab, setTab] = useState(0);
@@ -26,6 +32,7 @@ export default function DashboardPage() {
       setJoined(res.data.joinedEvents || []);
     } catch (err) {
       console.error(err);
+      setSnack({ open: true, message: "Failed to load dashboard data", severity: "error" });
     } finally {
       setLoading(false);
     }
@@ -45,12 +52,12 @@ export default function DashboardPage() {
   }
 
   const renderCreated = () => {
-    if (loading) return "Loading";
+    if (loading) return <Loader />;
     if (!created.length) return <EmptyState title="You haven't created any events yet" actionText="Create Event" onAction={() => (window.location.href="/create-event")} />;
     return (
       <Grid container spacing={3}>
         {created.map((event) => (
-          <Grid key={event._id} size={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid item key={event._id} xs={12} sm={6} md={4}>
             <EventCard
               event={{ ...event, location: { formattedAddress: event.location?.formattedAddress || "-" }, tags: event.tags || [] }}
               actions={
@@ -72,7 +79,7 @@ export default function DashboardPage() {
     return (
       <Grid container spacing={3}>
         {joined.map((event) => (
-          <Grid key={event._id} size={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid item key={event._id} xs={12} sm={6} md={4}>
             <EventCard
               event={{ ...event, location: { formattedAddress: event.location?.formattedAddress || "-" }, tags: event.tags || [] }}
               actions={

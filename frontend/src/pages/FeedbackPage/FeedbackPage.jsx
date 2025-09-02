@@ -30,6 +30,7 @@ export default function FeedbackPage() {
     eventRating: 0,
     hostFeedback: "",
     eventExperience: "",
+    attendeeName: ""
   });
   const [snack, setSnack] = useState({ open: false, message: "", severity: "success" });
 
@@ -45,10 +46,12 @@ export default function FeedbackPage() {
         const tokenRes = await axiosInstance.post("/feedback/validate-token", { token });
         setEventDetails(tokenRes.data);
         setCanProvideFeedback(true);
-      } else {
+      } else if (eventId) {
         const attendanceRes = await axiosInstance.get(`/feedback/${eventId}/validate-attendance`);
         setEventDetails(attendanceRes.data);
         setCanProvideFeedback(true);
+      } else {
+        throw new Error("No token or event ID provided");
       }
     } catch (err) {
       const message = err.response?.data?.message || "Unable to access feedback form";
@@ -75,22 +78,49 @@ export default function FeedbackPage() {
       return;
     }
 
+    if (!formData.attendeeName.trim()) {
+      setSnack({ open: true, message: "Please provide your name", severity: "error" });
+      return;
+    }
+
     try {
       setSubmitting(true);
 
       const payload = {
-        eventId,
         hostRating: formData.hostRating,
         eventRating: formData.eventRating,
-        hostFeedback: formData.hostFeedback,
         eventExperience: formData.eventExperience,
-        ...(token && { token })
+        hostFeedback: formData.hostFeedback,
+        attendeeName: formData.attendeeName.trim()
       };
 
-      await axiosInstance.post("/feedback/submit", payload);
+      let response;
+      if (token) {
+        // Use token-based submission
+        response = await axiosInstance.post("/feedback/submit-with-token", {
+          ...payload,
+          token
+        });
+      } else if (eventId) {
+        // Use regular submission
+        response = await axiosInstance.post("/feedback/submit", {
+          ...payload,
+          eventId
+        });
+      } else {
+        throw new Error("No token or event ID available");
+      }
 
       setSnack({ open: true, message: "Feedback submitted successfully!", severity: "success" });
-      setTimeout(() => navigate(`/events/${eventId}`), 2000);
+      
+      // Navigate based on available data
+      if (eventId) {
+        setTimeout(() => navigate(`/events/${eventId}`), 2000);
+      } else if (eventDetails?.event?._id) {
+        setTimeout(() => navigate(`/events/${eventDetails.event._id}`), 2000);
+      } else {
+        setTimeout(() => navigate("/"), 2000);
+      }
     } catch (err) {
       const message = err.response?.data?.message || "Failed to submit feedback";
       setSnack({ open: true, message, severity: "error" });
@@ -123,13 +153,28 @@ export default function FeedbackPage() {
         </Typography>
         
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-          We'd love to hear about your experience at "{eventDetails?.eventTitle || "this event"}".
+          We'd love to hear about your experience at "{eventDetails?.event?.title || eventDetails?.eventTitle || "this event"}".
         </Typography>
 
         <form onSubmit={handleSubmit}>
           <Box sx={{ mb: 4 }}>
             <Typography variant="h6" gutterBottom>
-              Rate the Host
+              Your Name *
+            </Typography>
+            <TextField
+              label="Your Name"
+              fullWidth
+              required
+              value={formData.attendeeName}
+              onChange={handleTextChange("attendeeName")}
+              placeholder="Enter your name..."
+              sx={{ mb: 2 }}
+            />
+          </Box>
+
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h6" gutterBottom>
+              Rate the Host *
             </Typography>
             <Box sx={{ mb: 2 }}>
               <StarRating
@@ -152,7 +197,7 @@ export default function FeedbackPage() {
 
           <Box sx={{ mb: 4 }}>
             <Typography variant="h6" gutterBottom>
-              Rate the Event
+              Rate the Event *
             </Typography>
             <Box sx={{ mb: 2 }}>
               <StarRating
@@ -176,7 +221,15 @@ export default function FeedbackPage() {
           <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
             <Button
               variant="outlined"
-              onClick={() => navigate(`/events/${eventId}`)}
+              onClick={() => {
+                if (eventId) {
+                  navigate(`/events/${eventId}`);
+                } else if (eventDetails?.event?._id) {
+                  navigate(`/events/${eventDetails.event._id}`);
+                } else {
+                  navigate("/");
+                }
+              }}
               disabled={submitting}
             >
               Cancel
