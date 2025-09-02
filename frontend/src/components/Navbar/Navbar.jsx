@@ -56,7 +56,7 @@ const Navbar = () => {
             }}
             onClick={() => navigate("/")}
           >
-            SocioGather
+            EventHub
           </Typography>
         </Box>
 
